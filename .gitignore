@@ -1,0 +1,4 @@
+*.p8
+*.ipa
+.env
+node_modules/
