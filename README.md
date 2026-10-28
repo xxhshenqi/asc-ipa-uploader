@@ -3,6 +3,18 @@
 > 用 **App Store Connect 官方 API（Build Uploads）** 把 IPA 上传到 App Store Connect 的零依赖命令行工具。
 > Zero-dependency CLI tool to upload IPAs to App Store Connect via the **official Build Uploads API**.
 
+## 安装 / Install
+
+```bash
+# 方式一：直接从仓库安装（无需 npm 账号，2 秒装完）
+npm i -g https://github.com/xxhshenqi/asc-ipa-uploader/archive/refs/heads/master.tar.gz
+
+# 方式二：npx 临时运行（需要本机有 git）
+npx github:xxhshenqi/asc-ipa-uploader --help
+```
+
+安装后直接使用 `asc-ipa-uploader` 命令。
+
 ## 背景 / Background
 
 2026 年 10 月底，Apple 在网关层（daiquiri `26HOTFIX47`）封禁了 `contentdelivery.itunes.apple.com` 上基于「Apple ID + App 专用密码」的登录通道（错误码 `-22938`）。所有依赖这条通道的第三方上传工具（ios-uploader、各类转运脚本等）**集体失效**，且换用 API 密钥签出的 JWT 也无法进入旧的内部上传通道。
@@ -44,17 +56,14 @@ In late October 2026, Apple blocked app-specific-password authentication for the
 
 ```bash
 # 列出团队下所有 App（查询 App ID）
-node asc-ipa-uploader.mjs \
-  --key ./AuthKey_XXXXXXXXXX.p8 --key-id XXXXXXXXXX --issuer <ISSUER_ID> \
-  --list-apps
+asc-ipa-uploader --key ./AuthKey_XXXXXXXXXX.p8 --key-id XXXXXXXXXX --issuer <ISSUER_ID> --list-apps
 
 # 上传 IPA（版本号 = CFBundleShortVersionString，build 号 = CFBundleVersion）
-node asc-ipa-uploader.mjs \
-  --key ./AuthKey_XXXXXXXXXX.p8 --key-id XXXXXXXXXX --issuer <ISSUER_ID> \
+asc-ipa-uploader --key ./AuthKey_XXXXXXXXXX.p8 --key-id XXXXXXXXXX --issuer <ISSUER_ID> \
   --app <APP_ID> --ipa ./MyApp.ipa --version 1.2.5 --build 125
 
-# 上传并直接创建 1.2.5 版本记录、关联 build（之后去后台填更新说明提审即可）
-node asc-ipa-uploader.mjs ... --release
+# 上传并直接创建版本记录、关联 build（之后去后台填更新说明提审即可）
+asc-ipa-uploader ... --release
 ```
 
 参数速查：
