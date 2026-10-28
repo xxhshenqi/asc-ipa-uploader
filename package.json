@@ -1,0 +1,39 @@
+{
+  "name": "asc-ipa-uploader",
+  "version": "1.0.0",
+  "description": "Zero-dependency CLI to upload IPAs to App Store Connect via the official Build Uploads API. Works after Apple blocked app-specific-password uploads (-22938) in Oct 2026.",
+  "type": "module",
+  "bin": {
+    "asc-ipa-uploader": "./asc-ipa-uploader.mjs"
+  },
+  "files": [
+    "asc-ipa-uploader.mjs",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "keywords": [
+    "app-store-connect",
+    "appstore",
+    "ipa",
+    "ipa-uploader",
+    "testflight",
+    "ios",
+    "transporter",
+    "build-uploads",
+    "itunes-connect",
+    "cli"
+  ],
+  "license": "MIT",
+  "author": "xxhshenqi",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/xxhshenqi/asc-ipa-uploader.git"
+  },
+  "bugs": {
+    "url": "https://github.com/xxhshenqi/asc-ipa-uploader/issues"
+  },
+  "homepage": "https://github.com/xxhshenqi/asc-ipa-uploader#readme"
+}
