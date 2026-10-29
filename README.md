@@ -17,9 +17,9 @@ npx github:xxhshenqi/asc-ipa-uploader --help
 
 ## 背景 / Background
 
-2026 年 10 月底，Apple 在网关层（daiquiri `26HOTFIX47`）封禁了 `contentdelivery.itunes.apple.com` 上基于「Apple ID + App 专用密码」的登录通道（错误码 `-22938`）。所有依赖这条通道的第三方上传工具（ios-uploader、各类转运脚本等）**集体失效**，且换用 API 密钥签出的 JWT 也无法进入旧的内部上传通道。
+2026 年 10 月底，Apple 悄悄收紧了 `contentdelivery.itunes.apple.com` 的 **User-Agent 校验**，要求严格匹配特定完整格式。依赖旧 UA 的第三方上传工具（ios-uploader 等）集体报 `-22938` 错误 —— 原作者 simonnilsson 排查后确认只需改 UA，并在 12 小时内发布了 **v4.0.3** 修复。
 
-本项目改走 Apple 官方 App Store Connect API 的 **Build Uploads** 流程（完全公开文档化的接口），只需一个 App Store Connect API 密钥即可上传：
+这件事真正暴露的风险是：这类工具依赖 Apple **未公开**的内部接口和「魔法字符串」，Apple 可以随时静默修改、没有任何预告，你就得跟着猜一次。本项目因此改走 Apple **公开文档化**的 Build Uploads API —— 接口契约是公开的，不受 User-Agent 这类隐形约定影响，只需一个 App Store Connect API 密钥即可上传：
 
 ```
 POST /v1/buildUploads            # 登记一次构建上传
@@ -29,13 +29,15 @@ PATCH /v1/buildUploadFiles/{id}  # 标记上传完成
 → Apple 自动解析出 build（TestFlight / 提审可用）
 ```
 
-In late October 2026, Apple blocked app-specific-password authentication for the legacy content delivery upload service (error `-22938`), breaking all third-party IPA uploaders that relied on it. This tool uses the **official, documented** App Store Connect Build Uploads API instead — all you need is an App Store Connect API key.
+> 只是偶尔传个包？**ios-uploader v4.0.3 已经修好，继续用它完全没问题**。本项目面向要长期依赖上传流程的场景（CI 自动化、团队共用）。
+
+In late October 2026, Apple quietly tightened the **User-Agent validation** on the legacy upload endpoint, breaking third-party uploaders with error `-22938`. The fix (shipped as ios-uploader v4.0.3 within 12 hours) was simply a UA change. The lesson: tools built on undocumented internal APIs and magic strings break whenever Apple changes something silently. This tool uses the **official, documented** Build Uploads API instead — the contract is public, with no hidden conventions to guess.
 
 ## 特性 / Features
 
 - ✅ 零依赖（Node.js ≥ 18，只用内置模块）
 - ✅ ES256 JWT 签名（API 密钥认证）
-- ✅ 分块上传 + 进度显示 + 断点友好（每个 API 调用自动重试瞬时 401）
+- ✅ 分块上传 + 进度显示（每个 API 调用自动重试瞬时 401）
 - ✅ 上传前自动检查同版本 build 是否已存在（防止重复上传白忙活）
 - ✅ 可选 `--release`：上传后自动创建 App Store 版本记录并关联 build
 - ✅ 支持 Windows / macOS / Linux
@@ -43,10 +45,7 @@ In late October 2026, Apple blocked app-specific-password authentication for the
 ## 准备 / Prerequisites
 
 1. **App Store Connect API 密钥**（Team Key）：
-   打开 [App Store Connect → 用户和访问 → 集成 → App Store Connect API](https://appstoreconnect.apple.com/access/integrations/api) → 生成密钥（角色选 **App Manager** 或更高）→ 下载 `.p8` 文件（只能下载一次），并记下：
-   - **Key ID**（如 `ABCD12345E`）
-   - **Issuer ID**（UUID 格式）
-   - `.p8` 私钥文件路径
+   打开 [App Store Connect → 用户和访问 → 集成 → App Store Connect API](https://appstoreconnect.apple.com/access/integrations/api) → 生成密钥（角色选 **App Manager** 或更高）→ 下载 `.p8` 文件（只能下载一次），并记下 **Key ID**、**Issuer ID** 和 `.p8` 路径。
 
 2. **App ID**：App Store Connect 中你的 App 的数字 ID（URL 里 `apps/` 后面的数字，或用本工具 `--list-apps` 查询）。
 
@@ -91,7 +90,7 @@ A: 新创建的 API 密钥在 Apple 后端同步完全前会偶发 401，本工�
 A: Apple 不允许重复的 build 号，请升 build 号（如 125 → 126）再传。本工具上传前会自动检测并提示。
 
 **Q: 和 ios-uploader 什么关系？**
-A: 无关联。ios-uploader 曾是最好用的第三方上传工具（本项目受其启发，感谢 [@simonnilsson](https://github.com/simonnilsson/ios-uploader)），但它依赖的密码登录通道被 Apple 封禁后已不可用；本项目走官方 API，不依赖任何内部通道。
+A: 无关联，但受其启发（感谢 [@simonnilsson](https://github.com/simonnilsson/ios-uploader)）。ios-uploader 走的是 Apple 未公开的内部接口，已因 UA 变更失效过一次（v4.0.3 已修复）；本项目走官方公开 API，属于不同取舍：前者轻量、免 API 密钥，后者稳定、可长期依赖。
 
 ## 安全提醒 / Security
 
